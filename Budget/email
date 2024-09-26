@@ -1,0 +1,73 @@
+import win32com.client as win32
+
+def send_budget_insights(email, budget_summary, advice, products_services):
+    # Create an instance of Outlook application
+    outlook = win32.Dispatch('outlook.application')
+    
+    # Create a new email item
+    mail = outlook.CreateItem(0)
+    
+    # Set email attributes
+    mail.To = email
+    mail.Subject = "Your Monthly Budget Insights and Special Offers"
+    
+    # Create the email body (HTML format)
+    email_body = f"""
+    <h2>Your Budget Insights for September 2024</h2>
+    <p><strong>Income:</strong> $5,000</p>
+    <p><strong>Total Expenses:</strong> $4,200</p>
+    <ul>
+        <li><strong>Rent:</strong> $1,500</li>
+        <li><strong>Groceries:</strong> $500</li>
+        <li><strong>Transport:</strong> $300</li>
+        <li><strong>Utilities:</strong> $200</li>
+        <li><strong>Discretionary Spending:</strong> $1,200</li>
+        <li><strong>Savings:</strong> $500</li>
+    </ul>
+
+    <h2>Budget Insights</h2>
+    <p>It looks like you're spending <strong>24% of your income</strong> on discretionary expenses. 
+    Consider reducing these expenses by allocating more towards savings or debt repayment. 
+    You are on track to meet your savings goal but might want to review grocery and transport costs to further optimize your budget.</p>
+
+    <h2>Financial Advice</h2>
+    <p>Here are a few suggestions for improving your budget:</p>
+    <ul>
+        <li>Reduce discretionary spending to 15% of your total income.</li>
+        <li>Increase your emergency fund contributions by $200 per month to reach your goal faster.</li>
+        <li>Explore refinancing your mortgage to take advantage of lower interest rates.</li>
+    </ul>
+
+    <h2>Exclusive Bank Products and Services</h2>
+    <p>As a valued customer, we would like to offer you access to the following services:</p>
+    <ul>
+    """
+    
+    # Add the products/services as a list
+    for product in products_services:
+        email_body += f"<li>{product}</li>"
+    
+    email_body += """
+    </ul>
+    <p>Best Regards,<br>Your Financial Advisor Team</p>
+    """
+    
+    # Set the email body with HTML content
+    mail.HTMLBody = email_body
+    
+    # Send the email
+    mail.Send()
+
+# Example usage:
+if __name__ == "__main__":
+    email = "customer@example.com"
+    budget_summary = "You are currently spending 84% of your monthly income. There's a 10% increase in your discretionary spending compared to last month."
+    advice = "To ensure you're saving enough for long-term goals, consider reducing your entertainment and dining-out expenses."
+    products_services = [
+        "No-fee credit cards with travel rewards",
+        "Personal loan offers at 5.99% APR",
+        "Exclusive savings account with 3.5% interest",
+        "Fixed-rate mortgage refinancing options"
+    ]
+    
+    send_budget_insights(email, budget_summary, advice, products_services)
