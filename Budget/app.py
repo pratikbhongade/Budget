@@ -6,7 +6,6 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objs as go
 import json
-import requests
 import features
 
 # Initialize Flask
@@ -68,29 +67,55 @@ def get_progress_color(budget_percentage):
     else:
         return "danger"   # Red
 
-# Function to fetch financial news from the News API
+# Function to fetch financial news from local JSON
 def fetch_financial_news():
-    api_key = 'f9b176dbc7e4403f8d8cb4994dd45bda'  # Provided News API key
-    url = f"https://newsapi.org/v2/top-headlines?category=business&apiKey={api_key}"
-    response = requests.get(url)
-    news_data = response.json()
-
-    if news_data['status'] == 'ok':
-        articles = news_data['articles'][:5]  # Get the top 5 articles
-        return articles
-    else:
+    try:
+        with open('data/financial_news.json', 'r') as f:
+            news_data = json.load(f)
+            return news_data.get('articles', [])
+    except Exception as e:
         return []
 
-# Function to fetch currency conversion rates
-def fetch_currency_conversion(base, target, amount):
-    api_key = 'YOUR_EXCHANGE_API_KEY'  # Replace with your actual exchange rate API key
-    url = f"https://v6.exchangerate-api.com/v6/{api_key}/pair/{base}/{target}/{amount}"
-    response = requests.get(url)
-    conversion_data = response.json()
-    if conversion_data['result'] == 'success':
-        return conversion_data['conversion_result']
-    else:
-        return None
+# Function to fetch currency conversion rates from local JSON
+def fetch_currency_conversion_rates():
+    try:
+        with open('data/currency_rates.json', 'r') as f:
+            rates_data = json.load(f)
+            return rates_data.get('rates', {})
+    except Exception as e:
+        return {}
+
+# Function to fetch the top 5 transactions by amount
+def top_5_transactions():
+    top_transactions = transaction_data.nlargest(5, 'Amount')
+    return dbc.Card([
+        dbc.CardBody([
+            html.H5("Top 5 Transactions", className="card-title", style={"color": "black"}),
+            html.Ul([html.Li(f"{row['Description']} - ${row['Amount']:,.2f}", style={"color": "black"}) for _, row in top_transactions.iterrows()])
+        ])
+    ], className="mb-4")
+
+# Function to fetch the top 5 categories by total spending
+def top_5_categories():
+    category_totals = transaction_data[transaction_data['Transaction Type'] == 'Debit'].groupby('Category')['Amount'].sum()
+    top_categories = category_totals.nlargest(5)
+    return dbc.Card([
+        dbc.CardBody([
+            html.H5("Top 5 Categories", className="card-title", style={"color": "black"}),
+            html.Ul([html.Li(f"{category} - ${amount:,.2f}", style={"color": "black"}) for category, amount in top_categories.items()])
+        ])
+    ], className="mb-4")
+
+# Function to fetch the top 5 merchants by total spending
+def top_5_merchants():
+    merchant_totals = transaction_data[transaction_data['Transaction Type'] == 'Debit'].groupby('Description')['Amount'].sum()
+    top_merchants = merchant_totals.nlargest(5)
+    return dbc.Card([
+        dbc.CardBody([
+            html.H5("Top 5 Merchants", className="card-title", style={"color": "black"}),
+            html.Ul([html.Li(f"{merchant} - ${amount:,.2f}", style={"color": "black"}) for merchant, amount in top_merchants.items()])
+        ])
+    ], className="mb-4")
 
 # Layout for the dashboard with tabs
 dash_app.layout = html.Div(
@@ -201,7 +226,39 @@ def render_tab_content(active_tab):
                             'scrollZoom': True  # Enable zoom and pan
                         })
                     ), className="graph-container"
-                ), width=8),
+                ), width=6),
+
+                dbc.Col(html.Div(
+                    dcc.Loading(
+                        id="loading-2",
+                        type="circle",
+                        children=dcc.Graph(id='category-breakdown', config={
+                            'displayModeBar': True,
+                            'scrollZoom': True  # Enable zoom and pan
+                        })
+                    ), className="graph-container"
+                ), width=6),
+            ], className="mb-4"),
+
+            # Row for Top 5 Transactions, Categories, and Merchants
+            dbc.Row([
+                dbc.Col(top_5_transactions(), width=4),
+                dbc.Col(top_5_categories(), width=4),
+                dbc.Col(top_5_merchants(), width=4)
+            ], className="mb-4"),
+
+            # Savings trend graph
+            dbc.Row([
+                dbc.Col(html.Div(
+                    dcc.Loading(
+                        id="loading-3",
+                        type="circle",
+                        children=dcc.Graph(id='savings-trend', config={
+                            'displayModeBar': True,
+                            'scrollZoom': True  # Enable zoom and pan
+                        })
+                    ), className="graph-container"
+                ), width=6),
 
                 # Financial News and Currency Conversion Widget
                 dbc.Col([
@@ -212,9 +269,9 @@ def render_tab_content(active_tab):
                         children=html.Div(id='financial-news', style={
                             "background-color": "#ffffff",
                             "border-radius": "15px",
-                            "box-shadow": "0 4px 16px rgba(0, 0, 0, 0                            .2)",
+                            "box-shadow": "0 4px 16px rgba(0, 0, 0, 0.2)",
                             "padding": "20px",
-                            "height": "250px",  # Reduced height for the news widget
+                            "height": "250px",
                             "overflow-y": "scroll",
                             "border-left": "5px solid #F7971E",
                             "transition": "box-shadow 0.3s ease-in-out"
@@ -264,31 +321,7 @@ def render_tab_content(active_tab):
                             html.Div(id='conversion-result', style={'margin-top': '10px', 'color': 'black'}),
                         ])
                     ], className="mt-4", style={"height": "220px"})  # Reduced height for the card
-                ], width=4),
-            ], className="mb-4"),
-
-            # Category breakdown pie chart and savings trend
-            dbc.Row([
-                dbc.Col(html.Div(
-                    dcc.Loading(
-                        id="loading-2",
-                        type="circle",
-                        children=dcc.Graph(id='category-breakdown', config={
-                            'displayModeBar': True,
-                            'scrollZoom': True  # Enable zoom and pan
-                        })
-                    ), className="graph-container"
-                ), width=6),
-                dbc.Col(html.Div(
-                    dcc.Loading(
-                        id="loading-3",
-                        type="circle",
-                        children=dcc.Graph(id='savings-trend', config={
-                            'displayModeBar': True,
-                            'scrollZoom': True  # Enable zoom and pan
-                        })
-                    ), className="graph-container"
-                ), width=6),
+                ], width=6),
             ]),
 
             # Transaction Details Table
@@ -309,7 +342,7 @@ def render_tab_content(active_tab):
                 ]))
             ])
         ])
-    
+
     elif active_tab == "budget-tracker":
         # Content for Budget Tracker tab
         return html.Div([
@@ -379,9 +412,13 @@ def update_graphs(active_tab):
 )
 def convert_currency(n_clicks, base, target, amount):
     if n_clicks and base and target and amount:
-        conversion_result = fetch_currency_conversion(base, target, amount)
-        if conversion_result:
-            return f"{amount} {base} = {conversion_result:.2f} {target}"
+        rates = fetch_currency_conversion_rates()
+
+        # Ensure both base and target currencies are available in the rates
+        if base in rates and target in rates:
+            conversion_rate = rates[target] / rates[base]  # Calculate the conversion rate
+            converted_amount = amount * conversion_rate
+            return f"{amount} {base} = {converted_amount:.2f} {target}"
         else:
             return "Conversion failed. Try again."
     return ""
@@ -409,14 +446,14 @@ def update_financial_news(_):
         for article in articles:
             news_items.append(
                 html.Div([
-                    html.A(article['title'], href=article['url'], target="_blank", style={"font-weight": "bold"}),
-                    html.P(article['description'], style={"font-size": "12px"}),
+                    html.A(article['title'], href=article['url'], target="_blank", style={"font-weight": "bold", "color": "black"}),
+                    html.P(article['description'], style={"font-size": "12px", "color": "black"}),
                     html.Hr()
                 ])
             )
         return news_items
     else:
-        return html.P("No news available at the moment.")
+        return html.P("No news available at the moment.", style={"color": "black"})
 
 # Flask route for login page
 @app.route('/login', methods=['GET', 'POST'])
@@ -450,4 +487,5 @@ def home():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
