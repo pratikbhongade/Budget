@@ -1,0 +1,16 @@
+body {
+    font-family: 'Open Sans', sans-serif;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.nav-link.active {
+    background-color: #007bff !important;
+    color: white !important;
+}
+
+button {
+    width: 100%;
+}

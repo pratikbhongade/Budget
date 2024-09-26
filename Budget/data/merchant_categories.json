@@ -1,0 +1,132 @@
+{
+    "merchants": [
+        {
+            "merchant": "Walmart",
+            "category": "Groceries"
+        },
+        {
+            "merchant": "Target",
+            "category": "Groceries"
+        },
+        {
+            "merchant": "Amazon",
+            "category": "Online Shopping"
+        },
+        {
+            "merchant": "McDonalds",
+            "category": "Dining"
+        },
+        {
+            "merchant": "Starbucks",
+            "category": "Dining"
+        },
+        {
+            "merchant": "Shell",
+            "category": "Fuel"
+        },
+        {
+            "merchant": "Chevron",
+            "category": "Fuel"
+        },
+        {
+            "merchant": "ExxonMobil",
+            "category": "Fuel"
+        },
+        {
+            "merchant": "Costco",
+            "category": "Wholesale"
+        },
+        {
+            "merchant": "Home Depot",
+            "category": "Home Improvement"
+        },
+        {
+            "merchant": "Lowe's",
+            "category": "Home Improvement"
+        },
+        {
+            "merchant": "Best Buy",
+            "category": "Electronics"
+        },
+        {
+            "merchant": "Apple",
+            "category": "Electronics"
+        },
+        {
+            "merchant": "Netflix",
+            "category": "Entertainment"
+        },
+        {
+            "merchant": "Spotify",
+            "category": "Entertainment"
+        },
+        {
+            "merchant": "Disney+",
+            "category": "Entertainment"
+        },
+        {
+            "merchant": "Comcast",
+            "category": "Utilities"
+        },
+        {
+            "merchant": "AT&T",
+            "category": "Utilities"
+        },
+        {
+            "merchant": "T-Mobile",
+            "category": "Utilities"
+        },
+        {
+            "merchant": "Verizon",
+            "category": "Utilities"
+        },
+        {
+            "merchant": "Whole Foods",
+            "category": "Groceries"
+        },
+        {
+            "merchant": "Trader Joe's",
+            "category": "Groceries"
+        },
+        {
+            "merchant": "CVS Pharmacy",
+            "category": "Pharmacy"
+        },
+        {
+            "merchant": "Walgreens",
+            "category": "Pharmacy"
+        },
+        {
+            "merchant": "Uber",
+            "category": "Transportation"
+        },
+        {
+            "merchant": "Lyft",
+            "category": "Transportation"
+        },
+        {
+            "merchant": "Delta Airlines",
+            "category": "Travel"
+        },
+        {
+            "merchant": "American Airlines",
+            "category": "Travel"
+        },
+        {
+            "merchant": "Southwest Airlines",
+            "category": "Travel"
+        },
+        {
+            "merchant": "Marriott",
+            "category": "Hotels"
+        },
+        {
+            "merchant": "Hilton",
+            "category": "Hotels"
+        },
+        {
+            "merchant": "Hyatt",
+            "category": "Hotels"
+        }
+    ]
+}
