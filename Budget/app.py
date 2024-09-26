@@ -30,6 +30,7 @@ category_rules = {merchant['merchant']: merchant['category'] for merchant in mer
 
 # Sample transaction data
 excel_file_path = 'data/sample_transaction_sheet.xlsx'
+monthwise_income_expense_file = 'data/monthwise_income_expense.xlsx'
 
 # Function to read the Excel file and return DataFrame
 def load_excel_data(file_path):
@@ -43,6 +44,9 @@ def categorize_transactions(transaction_df):
 
 # Load the Excel data for the dashboard and categorize transactions
 transaction_data = categorize_transactions(load_excel_data(excel_file_path))
+
+# Load the month-wise income and expense data
+monthwise_data = load_excel_data(monthwise_income_expense_file)
 
 # Function to calculate total income, expenses, and savings
 def calculate_summary():
@@ -203,7 +207,7 @@ def render_tab_content(active_tab):
                         dbc.CardBody([
                             html.Div([
                                 html.I(className="material-icons", style={"float": "right", "color": "#ffffff99", "font-size": "36px"}, children="pie_chart"),
-                                html.H4("Budget Used", className="card-title text-white"),
+                                html.H4("Budget Used",className="card-title text-white"),
                                 dbc.Progress(value=calculate_summary()[3], color=get_progress_color(calculate_summary()[3]), className="mt-2"),
                                 html.P(f"{calculate_summary()[3]:.2f}%", className="text-white")
                             ])
@@ -215,68 +219,37 @@ def render_tab_content(active_tab):
                 )
             ], className="mb-4"),
 
-            # Graphs for income-expense comparison and category breakdown
+            # Graph for Month-wise Income vs Expense
             dbc.Row([
                 dbc.Col(html.Div(
                     dcc.Loading(
-                        id="loading-1",
+                        id="loading-income-expense",
                         type="circle",
-                        children=dcc.Graph(id='income-expense-comparison', config={
+                        children=dcc.Graph(id='income-expense-monthwise', config={
                             'displayModeBar': True,
                             'scrollZoom': True  # Enable zoom and pan
                         })
                     ), className="graph-container"
-                ), width=6),
+                ), width=8),
 
-                dbc.Col(html.Div(
-                    dcc.Loading(
-                        id="loading-2",
-                        type="circle",
-                        children=dcc.Graph(id='category-breakdown', config={
-                            'displayModeBar': True,
-                            'scrollZoom': True  # Enable zoom and pan
-                        })
-                    ), className="graph-container"
-                ), width=6),
-            ], className="mb-4"),
-
-            # Row for Top 5 Transactions, Categories, and Merchants
-            dbc.Row([
-                dbc.Col(top_5_transactions(), width=4),
-                dbc.Col(top_5_categories(), width=4),
-                dbc.Col(top_5_merchants(), width=4)
-            ], className="mb-4"),
-
-            # Savings trend graph
-            dbc.Row([
-                dbc.Col(html.Div(
-                    dcc.Loading(
-                        id="loading-3",
-                        type="circle",
-                        children=dcc.Graph(id='savings-trend', config={
-                            'displayModeBar': True,
-                            'scrollZoom': True  # Enable zoom and pan
-                        })
-                    ), className="graph-container"
-                ), width=6),
-
-                # Financial News and Currency Conversion Widget
+                # Financial News and Currency Converter Widgets vertically stacked
                 dbc.Col([
                     html.H4("Financial News", className="text-dark"),
                     dcc.Loading(
-                        id="loading-4",
+                        id="loading-3",
                         type="circle",
                         children=html.Div(id='financial-news', style={
                             "background-color": "#ffffff",
                             "border-radius": "15px",
                             "box-shadow": "0 4px 16px rgba(0, 0, 0, 0.2)",
                             "padding": "20px",
-                            "height": "250px",
+                            "height": "200px",
                             "overflow-y": "scroll",
                             "border-left": "5px solid #F7971E",
                             "transition": "box-shadow 0.3s ease-in-out"
                         })
                     ),
+
                     # Currency Conversion Widget
                     dbc.Card([
                         dbc.CardBody([
@@ -320,9 +293,41 @@ def render_tab_content(active_tab):
                             ]),
                             html.Div(id='conversion-result', style={'margin-top': '10px', 'color': 'black'}),
                         ])
-                    ], className="mt-4", style={"height": "220px"})  # Reduced height for the card
-                ], width=6),
-            ]),
+                    ], className="mt-4", style={"height": "200px"})  # Adjusted height for currency converter
+                ], width=4),
+            ], className="mb-4"),
+
+            # Expense breakdown pie chart and Cumulative savings graph
+            dbc.Row([
+                dbc.Col(html.Div(
+                    dcc.Loading(
+                        id="loading-1",
+                        type="circle",
+                        children=dcc.Graph(id='category-breakdown', config={
+                            'displayModeBar': True,
+                            'scrollZoom': True  # Enable zoom and pan
+                        })
+                    ), className="graph-container"
+                ), width=6),
+
+                dbc.Col(html.Div(
+                    dcc.Loading(
+                        id="loading-2",
+                        type="circle",
+                        children=dcc.Graph(id='savings-trend', config={
+                            'displayModeBar': True,
+                            'scrollZoom': True  # Enable zoom and pan
+                        })
+                    ), className="graph-container"
+                ), width=6),
+            ], className="mb-4"),
+
+            # Row for Top 5 Transactions, Categories, and Merchants
+            dbc.Row([
+                dbc.Col(top_5_transactions(), width=4),
+                dbc.Col(top_5_categories(), width=4),
+                dbc.Col(top_5_merchants(), width=4)
+            ], className="mb-4"),
 
             # Transaction Details Table
             dbc.Row([
@@ -353,32 +358,38 @@ def render_tab_content(active_tab):
         ])
     return html.P("No tab selected")
 
-# Callback to update income-expense comparison and category breakdown graphs
+# Callback to update month-wise income vs expense graph
 @dash_app.callback(
-    [Output('income-expense-comparison', 'figure'),
-     Output('category-breakdown', 'figure'),
-     Output('savings-trend', 'figure')],
-    [Input('tabs', 'active_tab')]
+    Output('income-expense-monthwise', 'figure'),
+    Input('tabs', 'active_tab')
 )
-def update_graphs(active_tab):
+def update_monthwise_income_expense(active_tab):
     if active_tab == "dashboard":
-        # Filter and prepare data for the graphs
-        filtered_data = transaction_data.copy()
-
-        # Income vs. Expense comparison graph
-        income_expense_fig = px.bar(
-            filtered_data,
-            x='Date',
-            y='Amount',
-            color='Transaction Type',
-            title='Income vs Expenses Over Time',
+        # Plot month-wise income vs expense using the loaded monthwise_data
+        fig = px.bar(
+            monthwise_data,
+            x='Month',
+            y=['Income', 'Expense'],
             barmode='group',
+            title='Month-wise Income vs Expenses',
+            labels={'value': 'Amount ($)', 'variable': 'Type'},
             template='plotly_white'
         )
+        return fig
+    return {}
 
-        # Category breakdown pie chart
-        category_labels = filtered_data[filtered_data['Transaction Type'] == 'Debit']['Category'].unique()
-        category_values = filtered_data[filtered_data['Transaction Type'] == 'Debit'].groupby('Category')['Amount'].sum().values
+# Callback to update category breakdown pie chart and cumulative savings graph
+@dash_app.callback(
+    [Output('category-breakdown', 'figure'),
+     Output('savings-trend', 'figure')],
+    Input('tabs', 'active_tab')
+)
+def update_category_and_savings(active_tab):
+    if active_tab == "dashboard":
+        # Expense breakdown pie chart
+        category_totals = transaction_data[transaction_data['Transaction Type'] == 'Debit'].groupby('Category')['Amount'].sum()
+        category_labels = category_totals.index
+        category_values = category_totals.values
 
         category_fig = go.Figure(
             go.Pie(
@@ -391,16 +402,16 @@ def update_graphs(active_tab):
         )
         category_fig.update_layout(title="Expense Breakdown by Category", template="plotly_white")
 
-        # Savings trend graph
-        savings_data = filtered_data.groupby('Date').apply(
+        # Cumulative savings graph
+        savings_data = transaction_data.groupby('Date').apply(
             lambda x: x[x['Transaction Type'] == 'Credit']['Amount'].sum() - x[x['Transaction Type'] == 'Debit']['Amount'].sum()
         ).cumsum().reset_index()
 
         savings_fig = px.line(savings_data, x='Date', y=0, title="Cumulative Savings Over Time", template="plotly_white")
 
-        return income_expense_fig, category_fig, savings_fig
+        return category_fig, savings_fig
 
-    return {}, {}, {}
+    return {}, {}
 
 # Callback for currency conversion
 @dash_app.callback(
@@ -431,13 +442,12 @@ def convert_currency(n_clicks, base, target, amount):
 )
 def switch_currency(n_clicks, base, target):
     if n_clicks:
-        return target, base
-    return base, target
+            return base, target
 
 # Callback to update financial news
 @dash_app.callback(
     Output('financial-news', 'children'),
-    Input('loading-4', 'children')
+    Input('loading-3', 'children')
 )
 def update_financial_news(_):
     articles = fetch_financial_news()
