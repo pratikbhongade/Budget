@@ -1,0 +1,19 @@
+{
+    "articles": [
+        {
+            "title": "Stock Market Surges After Positive Jobs Report",
+            "description": "The stock market saw a significant increase following a better-than-expected jobs report.",
+            "url": "https://example.com/news1"
+        },
+        {
+            "title": "Federal Reserve Signals Potential Interest Rate Hike",
+            "description": "The Federal Reserve has hinted at a possible interest rate hike in the coming months.",
+            "url": "https://example.com/news2"
+        },
+        {
+            "title": "Tech Stocks Lead the Rally in the Latest Market Boom",
+            "description": "Technology stocks are showing strong performance amidst a broader market rally.",
+            "url": "https://example.com/news3"
+        }
+    ]
+}
